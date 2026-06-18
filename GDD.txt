@@ -1,0 +1,73 @@
+GDD Básico - Avión en Peligro
+
+1. Contexto
+- El jugador está dentro de un avión que va a estrellarse contra dos torres.
+- El objetivo es empujar a los tripulantes fuera del avión para que usen sus paracaídas.
+- Hay un límite de tiempo de 60 segundos antes de que el avión choque.
+- El escenario debe transmitir urgencia y peligro sin glorificar la tragedia.
+
+2. Controles del Jugador
+- Flecha Arriba: Mover arriba
+- Flecha Abajo: Mover abajo
+- Flecha Izquierda: Mover izquierda
+- Flecha Derecha: Mover derecha
+- Barra Espaciadora: Empujar NPC
+
+3. Mecánica principal
+- El jugador controla a un personaje dentro de la cabina del avión.
+- Puede moverse con flechas del teclado y empujar a los NPCs con barra espaciadora.
+- Empujar a un NPC hacia una zona segura hace que se lance con paracaídas.
+- Empujar sin motivo o mal puede restar puntos o causar pérdida de vidas.
+- No empujar a tiempo puede significar fracaso del nivel.
+
+4. Nivel 1
+- NPCs a rescatar: 15
+- Tiempo límite: 60 segundos
+- Peligros: Maletas, equipaje, azafatas, niños caen desde arriba (parte frontal del avión)
+- Objetivo: Salvar una cantidad mínima de NPCs antes de que termine el tiempo
+
+5. Puntajes
+- Salvar un tripulante: +10 puntos
+- Empujar sin necesidad: -5 puntos
+- Tocar un peligro: -10 puntos + -1 vida
+
+6. Vidas
+- Comenzar con 3 vidas
+- Se pierden al tocar peligros que caen
+- Game Over si se llega a 0 vidas
+
+7. Señales de advertencia
+- Antes de que caiga un peligro, mostrar una sombra o zona marcada en el piso.
+- Dar tiempo al jugador para reaccionar.
+
+8. Niveles
+- Nivel 1: Introducción. 15 NPCs, peligros moderados.
+- Nivel 2: Mayor dificultad. Más peligros, menos tiempo de reacción.
+- Nivel 3: Nivel final. Incluye un NPC peligroso + máxima dificultad.
+
+9. Escenas necesarias
+- MenuScene: inicio, botón Jugar.
+- Level1Scene, Level2Scene, Level3Scene.
+- GameOverScene.
+- VictoryScene.
+
+10. Elementos obligatorios
+- Mecánica de empujar/mover NPCs.
+- NPCs o personas en peligro (15 en nivel 1).
+- Objetos o acciones que sumen puntos (+10 por rescate).
+- Objetos o acciones que resten puntos (-5 por empuje innecesario).
+- Obstáculos o enemigos que resten vidas (-1 vida al tocar peligro).
+- Señales visuales antes del peligro.
+- Puntaje y vidas entre niveles.
+- NPC peligroso en el último nivel.
+
+11. Idea de nombre
+- "Parachute Push"
+- Representa la tensión de salvar a personas antes de una catástrofe.
+
+12. Detalles de desarrollo
+- Organizar el proyecto en escenas y archivos separados.
+- Usar Phaser.js y el CDN importado en index.html.
+- Agregar assets visuales después de la lógica.
+- Mantener el código claro y modular, sin superar 200 líneas por archivo.
+

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parachute Push</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #1a1a1a;
+      font-family: Arial, sans-serif;
+    }
+    #game {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@4.1.0/dist/phaser.js"></script>
+  <script src="scenes/MenuScene.js"></script>
+  <script src="scenes/Level1Scene.js"></script>
+  <script src="scenes/Level2Scene.js"></script>
+  <script src="scenes/Level3Scene.js"></script>
+  <script src="scenes/GameOverScene.js"></script>
+  <script src="scenes/VictoryScene.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
