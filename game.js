@@ -23,3 +23,4 @@ let game;
 window.addEventListener('load', function() {
   game = new Phaser.Game(config);
 });
+
