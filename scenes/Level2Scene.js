@@ -143,6 +143,16 @@ class Level2Scene extends Phaser.Scene {
             npc.setAlpha(0.5);
             this.npcsSaved++;
             this.score += 10;
+
+            if (this.npcsSaved >= this.npcTarget) {
+              this.hazardSpawner.remove();
+              this.gameTimer.remove();
+              this.scene.start('VictoryScene', {
+                score: this.score,
+                lives: this.lives,
+                npcsSaved: this.npcsSaved
+              });
+            }
           }
         }
       });
@@ -161,8 +171,9 @@ class Level2Scene extends Phaser.Scene {
     const type = Phaser.Utils.Array.GetRandom(hazardTypes);
 
     const x = Phaser.Math.Between(100, 700);
+    const sizes = { box: 40, luggage: 45, person: 25 };
     const hazard = this.physics.add.sprite(x, -50, type);
-    hazard.setDisplaySize(hazard.width, hazard.height);
+    hazard.setDisplaySize(sizes[type], type === 'person' ? 40 : type === 'luggage' ? 35 : 40);
     hazard.setVelocityY(300);
     hazard.setBounce(0.1);
 
@@ -222,9 +233,10 @@ class Level2Scene extends Phaser.Scene {
     }
 
     if (this.npcsSaved >= this.npcTarget) {
-      this.scene.start('Level3Scene', {
+      this.scene.start('VictoryScene', {
         score: this.score,
-        lives: this.lives
+        lives: this.lives,
+        npcsSaved: this.npcsSaved
       });
     } else {
       this.scene.start('GameOverScene', { score: this.score });

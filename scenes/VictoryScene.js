@@ -43,20 +43,49 @@ class VictoryScene extends Phaser.Scene {
       align: 'center'
     }).setOrigin(0.5);
 
-    const menuButton = this.add.rectangle(400, 420, 200, 60, 0x4ecdc4);
+    const nextButton = this.add.rectangle(200, 380, 150, 50, 0x4ecdc4);
+    nextButton.setInteractive({ useHandCursor: true });
+    nextButton.on('pointerover', () => nextButton.setFillStyle(0x45b9ad));
+    nextButton.on('pointerout', () => nextButton.setFillStyle(0x4ecdc4));
+    nextButton.on('pointerdown', () => {
+      this.scene.start('Level2Scene', {
+        score: this.score,
+        lives: this.lives
+      });
+    });
+
+    this.add.text(200, 380, 'Siguiente', {
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: '#ffffff',
+      align: 'center'
+    }).setOrigin(0.5);
+
+    const menuButton = this.add.rectangle(400, 380, 150, 50, 0xff9800);
     menuButton.setInteractive({ useHandCursor: true });
-    menuButton.on('pointerover', () => {
-      menuButton.setFillStyle(0x45b9ad);
-    });
-    menuButton.on('pointerout', () => {
-      menuButton.setFillStyle(0x4ecdc4);
-    });
+    menuButton.on('pointerover', () => menuButton.setFillStyle(0xe68900));
+    menuButton.on('pointerout', () => menuButton.setFillStyle(0xff9800));
     menuButton.on('pointerdown', () => {
       this.scene.start('MenuScene');
     });
 
-    this.add.text(400, 420, 'MENÚ', {
-      fontSize: '24px',
+    this.add.text(400, 380, 'Menú', {
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: '#ffffff',
+      align: 'center'
+    }).setOrigin(0.5);
+
+    const restartButton = this.add.rectangle(600, 380, 150, 50, 0xff6b6b);
+    restartButton.setInteractive({ useHandCursor: true });
+    restartButton.on('pointerover', () => restartButton.setFillStyle(0xff5252));
+    restartButton.on('pointerout', () => restartButton.setFillStyle(0xff6b6b));
+    restartButton.on('pointerdown', () => {
+      this.scene.start('Level1Scene');
+    });
+
+    this.add.text(600, 380, 'Reiniciar', {
+      fontSize: '18px',
       fontStyle: 'bold',
       color: '#ffffff',
       align: 'center'
