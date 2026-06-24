@@ -17,16 +17,17 @@ class Level3Scene extends Phaser.Scene {
     this.npcsSaved = 0;
     this.npcTarget = 6;
     this.falling = this.physics.add.group();
+    this.enemyHits = 3;
     this.invuln = false;
 
     this.buildWallsAndSeats();
     this.buildDoors();
-    this.player = this.physics.add.sprite(410, 227.5, 'player'); this.player.setDisplaySize(24, 34); this.player.setCollideWorldBounds(true);
-    this.enemy = this.physics.add.sprite(410, 60, 'enemy'); this.enemy.setDisplaySize(24, 34);
+    this.player = this.physics.add.sprite(410, 300, 'player'); this.player.setDisplaySize(18, 26); this.player.setCollideWorldBounds(true);
+    this.enemy = this.physics.add.sprite(410, 60, 'enemy'); this.enemy.setDisplaySize(18, 26);
     this.npcs = this.physics.add.group();
-    [[180, 122.5], [180, 332.5], [180, 542.5], [630, 122.5], [630, 332.5], [630, 542.5]].forEach(p => {
+    [[180, 108], [180, 300], [180, 492], [630, 108], [630, 300], [630, 492]].forEach(p => {
       const n = this.physics.add.sprite(p[0], p[1], 'npc');
-      n.setDisplaySize(20, 30); n.setCollideWorldBounds(true); n.saved = false;
+      n.setDisplaySize(16, 24); n.setCollideWorldBounds(true); n.saved = false;
       this.npcs.add(n);
     });
     this.createCoins();
@@ -34,6 +35,7 @@ class Level3Scene extends Phaser.Scene {
     this.livesText = this.add.text(10, 35, `Vidas: ${this.lives}`, { fontSize: '16px', color: '#ff6b6b' });
     this.timeText = this.add.text(10, 60, `Tiempo: ${this.timeRemaining}s`, { fontSize: '16px', color: '#ffeb3b' });
     this.savedText = this.add.text(10, 85, `Salvados: ${this.npcsSaved}/${this.npcTarget}`, { fontSize: '16px', color: '#4ecdc4' });
+    this.enemyText = this.add.text(10, 110, `Golpes Enemigo: ${this.enemyHits}`, { fontSize: '16px', color: '#ff4444' });
     this.keys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.UP, down: Phaser.Input.Keyboard.KeyCodes.DOWN,
       left: Phaser.Input.Keyboard.KeyCodes.LEFT, right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
@@ -54,7 +56,13 @@ class Level3Scene extends Phaser.Scene {
       if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
     });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
-    this.physics.add.overlap(this.player, this.enemy, () => { if (this.invuln) return; this.score -= 5; this.lives--; this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60); this.time.delayedCall(1000, () => { this.invuln = false; this.player.setAlpha(1); }); if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); } });
+    this.physics.add.overlap(this.player, this.enemy, () => {
+      if (this.invuln || this._go) return;
+      this.score -= 5; this.enemyHits--;
+      this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60);
+      this.time.delayedCall(1000, () => { this.invuln = false; this.player.setAlpha(1); });
+      if (this.enemyHits <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
+    });
 
     this.spawnHazard(); this.spawnHazard(); this.spawnHazard();
     this.hazardSpawner = this.time.addEvent({
@@ -84,11 +92,12 @@ class Level3Scene extends Phaser.Scene {
     this.livesText.setText(`Vidas: ${this.lives}`);
     this.timeText.setText(`Tiempo: ${this.timeRemaining}s`);
     this.savedText.setText(`Salvados: ${this.npcsSaved}/${this.npcTarget}`);
+    this.enemyText.setText(`Golpes Enemigo: ${this.enemyHits}`);
   }
 
   buildWallsAndSeats() {
     this.walls = this.physics.add.staticGroup();
-    const wX = [125, 695], dY = [122.5, 227.5, 332.5, 437.5, 542.5], gH = 60;
+    const wX = [125, 695], dY = [108, 204, 300, 396, 492], gH = 36;
     wX.forEach(x => {
       let p = 0;
       dY.forEach(dy => {
@@ -100,17 +109,17 @@ class Level3Scene extends Phaser.Scene {
     });
     this.seats = this.physics.add.staticGroup();
     [190, 410, 630].forEach(c => {
-      [[90,40],[175,80],[280,80],[385,80],[490,80],[577.5,45]].forEach(([y, h]) => {
-        const s = this.add.rectangle(c, y, 130, h, 0x555555);
+      [[60,60],[156,60],[252,60],[348,60],[444,60],[540,60]].forEach(([y, h]) => {
+        const s = this.add.rectangle(c, y, 110, h, 0x555555);
         this.physics.add.existing(s, true); this.seats.add(s);
       });
     });
   }
 
   buildDoors() {
-    [122.5, 227.5, 332.5, 437.5, 542.5].forEach(dy => {
-      this.add.rectangle(125, dy, 14, 60, 0x4ecdc4, 0.25);
-      this.add.rectangle(695, dy, 14, 60, 0x4ecdc4, 0.25);
+    [108, 204, 300, 396, 492].forEach(dy => {
+      this.add.rectangle(125, dy, 14, 36, 0x4ecdc4, 0.25);
+      this.add.rectangle(695, dy, 14, 36, 0x4ecdc4, 0.25);
       this.add.text(100, dy, '→', { fontSize: '16px', color: '#4ecdc4' }).setOrigin(0.5);
       this.add.text(700, dy, '←', { fontSize: '16px', color: '#4ecdc4' }).setOrigin(0.5);
     });
@@ -118,11 +127,11 @@ class Level3Scene extends Phaser.Scene {
 
   createCoins() {
     this.coins = this.physics.add.staticGroup();
-    [[410, 122], [605, 122], [180, 227], [410, 332], [605, 332],
-      [180, 437], [410, 542], [605, 542],
-      [300, 175], [520, 175], [300, 280], [520, 280],
-      [300, 385], [520, 385], [300, 490], [520, 490],
-      [300, 580], [520, 580]].forEach(p => {
+    [[410, 108], [605, 108], [180, 204], [410, 300], [605, 300],
+      [180, 396], [410, 492], [605, 492],
+      [300, 60], [520, 60], [300, 156], [520, 156],
+      [300, 252], [520, 252], [300, 348], [520, 348],
+      [300, 444], [520, 444]].forEach(p => {
       const c = this.coins.create(p[0], p[1], 'coin');
       c.setDisplaySize(12, 12);
     });
