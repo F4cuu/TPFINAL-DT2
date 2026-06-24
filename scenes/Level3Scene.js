@@ -1,5 +1,180 @@
 class Level3Scene extends Phaser.Scene {
-  constructor() {
-    super('Level3Scene');
+  constructor() { super('Level3Scene'); }
+
+  init(data) {
+    this.score = data.score || 0;
+    this.lives = data.lives !== undefined ? data.lives : 3;
+  }
+
+  create() {
+    createGameTextures(this);
+    this.add.rectangle(62, 300, 124, 600, 0x0d1b2a);
+    this.add.rectangle(738, 300, 124, 600, 0x0d1b2a);
+    this.add.rectangle(410, 300, 570, 600, 0x1a3a2a);
+    this.physics.world.setBounds(0, 0, 800, 600);
+
+    this.timeRemaining = 40;
+    this.npcsSaved = 0;
+    this.npcTarget = 6;
+    this.falling = this.physics.add.group();
+    this.invuln = false;
+
+    this.buildWallsAndSeats();
+    this.buildDoors();
+    this.player = this.physics.add.sprite(410, 227.5, 'player'); this.player.setDisplaySize(24, 34); this.player.setCollideWorldBounds(true);
+    this.enemy = this.physics.add.sprite(410, 60, 'enemy'); this.enemy.setDisplaySize(24, 34);
+    this.npcs = this.physics.add.group();
+    [[180, 122.5], [180, 332.5], [180, 542.5], [630, 122.5], [630, 332.5], [630, 542.5]].forEach(p => {
+      const n = this.physics.add.sprite(p[0], p[1], 'npc');
+      n.setDisplaySize(20, 30); n.setCollideWorldBounds(true); n.saved = false;
+      this.npcs.add(n);
+    });
+    this.createCoins();
+    this.scoreText = this.add.text(10, 10, `Puntos: ${this.score}`, { fontSize: '16px', color: '#fff' });
+    this.livesText = this.add.text(10, 35, `Vidas: ${this.lives}`, { fontSize: '16px', color: '#ff6b6b' });
+    this.timeText = this.add.text(10, 60, `Tiempo: ${this.timeRemaining}s`, { fontSize: '16px', color: '#ffeb3b' });
+    this.savedText = this.add.text(10, 85, `Salvados: ${this.npcsSaved}/${this.npcTarget}`, { fontSize: '16px', color: '#4ecdc4' });
+    this.keys = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.UP, down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+      left: Phaser.Input.Keyboard.KeyCodes.LEFT, right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      space: Phaser.Input.Keyboard.KeyCodes.SPACE
+    });
+
+    this.physics.add.collider(this.player, this.walls);
+    this.physics.add.collider(this.player, this.seats);
+    this.physics.add.collider(this.npcs, this.walls);
+    this.physics.add.collider(this.npcs, this.seats);
+    this.physics.add.collider(this.enemy, this.walls);
+    this.physics.add.collider(this.enemy, this.seats);
+    this.physics.add.collider(this.falling, this.walls, h => h.destroy());
+    this.physics.add.collider(this.falling, this.seats, h => h.destroy());
+    this.physics.add.overlap(this.player, this.falling, (p, h) => {
+      if (h && h.active) h.destroy();
+      this.score -= 5; this.lives--;
+      if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
+    });
+    this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
+    this.physics.add.overlap(this.player, this.enemy, () => { if (this.invuln) return; this.score -= 5; this.lives--; this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60); this.time.delayedCall(1000, () => { this.invuln = false; this.player.setAlpha(1); }); if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); } });
+
+    this.spawnHazard(); this.spawnHazard(); this.spawnHazard();
+    this.hazardSpawner = this.time.addEvent({
+      delay: 1000, callback: this.spawnHazard, callbackScope: this, loop: true
+    });
+    this.gameTimer = this.time.addEvent({
+      delay: 1000, callback: () => {
+        this.timeRemaining--; if (this.timeRemaining <= 0) this.endLevel();
+      }, callbackScope: this, loop: true
+    });
+  }
+
+  update() {
+    this.player.setVelocity(0, 0);
+    if (this.keys.left.isDown) this.player.setVelocityX(-200);
+    if (this.keys.right.isDown) this.player.setVelocityX(200);
+    if (this.keys.up.isDown) this.player.setVelocityY(-200);
+    if (this.keys.down.isDown) this.player.setVelocityY(200);
+    this.player.x = Phaser.Math.Clamp(this.player.x, 130, 670);
+    if (Phaser.Input.Keyboard.JustDown(this.keys.space)) this.pushNpc();
+    this.npcs.getChildren().forEach(npc => {
+      if (!npc.saved && (npc.x < 120 || npc.x > 680)) this.saveNpc(npc);
+    });
+    this.physics.moveToObject(this.enemy, this.player, 130, 650);
+    this.enemy.x = Phaser.Math.Clamp(this.enemy.x, 130, 670);
+    this.scoreText.setText(`Puntos: ${this.score}`);
+    this.livesText.setText(`Vidas: ${this.lives}`);
+    this.timeText.setText(`Tiempo: ${this.timeRemaining}s`);
+    this.savedText.setText(`Salvados: ${this.npcsSaved}/${this.npcTarget}`);
+  }
+
+  buildWallsAndSeats() {
+    this.walls = this.physics.add.staticGroup();
+    const wX = [125, 695], dY = [122.5, 227.5, 332.5, 437.5, 542.5], gH = 60;
+    wX.forEach(x => {
+      let p = 0;
+      dY.forEach(dy => {
+        const h = dy - gH / 2 - p;
+        if (h > 0) { const w = this.walls.create(x, p + h / 2, 'wall'); w.setDisplaySize(14, h).refreshBody(); }
+        p = dy + gH / 2;
+      });
+      if (600 - p > 0) { const w = this.walls.create(x, p + (600 - p) / 2, 'wall'); w.setDisplaySize(14, 600 - p).refreshBody(); }
+    });
+    this.seats = this.physics.add.staticGroup();
+    [190, 410, 630].forEach(c => {
+      [[90,40],[175,80],[280,80],[385,80],[490,80],[577.5,45]].forEach(([y, h]) => {
+        const s = this.add.rectangle(c, y, 130, h, 0x555555);
+        this.physics.add.existing(s, true); this.seats.add(s);
+      });
+    });
+  }
+
+  buildDoors() {
+    [122.5, 227.5, 332.5, 437.5, 542.5].forEach(dy => {
+      this.add.rectangle(125, dy, 14, 60, 0x4ecdc4, 0.25);
+      this.add.rectangle(695, dy, 14, 60, 0x4ecdc4, 0.25);
+      this.add.text(100, dy, '→', { fontSize: '16px', color: '#4ecdc4' }).setOrigin(0.5);
+      this.add.text(700, dy, '←', { fontSize: '16px', color: '#4ecdc4' }).setOrigin(0.5);
+    });
+  }
+
+  createCoins() {
+    this.coins = this.physics.add.staticGroup();
+    [[410, 122], [605, 122], [180, 227], [410, 332], [605, 332],
+      [180, 437], [410, 542], [605, 542],
+      [300, 175], [520, 175], [300, 280], [520, 280],
+      [300, 385], [520, 385], [300, 490], [520, 490],
+      [300, 580], [520, 580]].forEach(p => {
+      const c = this.coins.create(p[0], p[1], 'coin');
+      c.setDisplaySize(12, 12);
+    });
+  }
+
+  pushNpc() {
+    let near = null, minD = 90;
+    this.npcs.getChildren().forEach(n => {
+      if (n.saved) return;
+      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, n.x, n.y);
+      if (d < minD) { minD = d; near = n; }
+    });
+    if (!near) return;
+    near.setVelocity(near.x < 400 ? -320 : 320, Phaser.Math.Between(-40, 40));
+  }
+
+  saveNpc(n) {
+    n.saved = true; n.setAlpha(0.3); n.setVelocity(0, 0);
+    this.npcsSaved++; this.score += 10;
+    if (this.npcsSaved >= this.npcTarget) {
+      this.hazardSpawner.remove(); this.gameTimer.remove();
+      this.scene.start('VictoryScene', { score: this.score, lives: this.lives, npcsSaved: this.npcsSaved });
+    }
+  }
+
+  showWarning(x) {
+    const w = this.add.text(x, 20, '!', { fontSize: '30px', fontStyle: 'bold', color: '#ff0000' }).setOrigin(0.5);
+    this.tweens.add({ targets: w, alpha: 0, duration: 900, onComplete: () => w.destroy() });
+  }
+
+  spawnHazard() {
+    if (this.timeRemaining <= 0) return;
+    const type = Phaser.Utils.Array.GetRandom(['box', 'luggage', 'person']);
+    const lane = Phaser.Utils.Array.GetRandom([300, 520]);
+    const x = Phaser.Math.Between(-15, 15) + lane;
+    const sz = { box: [30, 30], luggage: [36, 26], person: [20, 34] };
+    this.showWarning(x);
+    this.time.delayedCall(800, () => {
+      if (this.timeRemaining <= 0) return;
+      const h = this.falling.create(x, -40, type);
+      h.setDisplaySize(sz[type][0], sz[type][1]);
+      h.setVelocityY(300);
+      this.time.delayedCall(2800, () => { if (h && h.active) h.destroy(); });
+    });
+  }
+
+  endLevel() {
+    if (this._go) return;
+    if (this.hazardSpawner) this.hazardSpawner.remove();
+    if (this.gameTimer) this.gameTimer.remove();
+    if (this.npcsSaved >= this.npcTarget)
+      this.scene.start('VictoryScene', { score: this.score, lives: this.lives, npcsSaved: this.npcsSaved });
+    else this.scene.start('GameOverScene', { score: this.score });
   }
 }
