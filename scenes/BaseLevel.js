@@ -34,8 +34,8 @@ class BaseLevel extends Phaser.Scene {
       this.enemy = this.physics.add.sprite(410, 60, 'enemy');
       this.enemy.setDisplaySize(18, 26);
       this.enemy.setCollideWorldBounds(true);
-      this.invuln = false;
     }
+    this.invuln = false;
 
     this.npcs = this.physics.add.group();
     this.getNpcPositions().forEach(p => {
@@ -67,13 +67,12 @@ class BaseLevel extends Phaser.Scene {
     if (this.hasEnemy()) {
       this.physics.add.collider(this.enemy, this.walls);
       this.physics.add.collider(this.enemy, this.seats);
-      this.physics.add.overlap(this.player, this.enemy, this.onEnemyHit, null, this);
+      this.physics.add.overlap(this.player, this.enemy, () => this.takeDamage('enemy'));
     }
 
     this.physics.add.overlap(this.player, this.falling, (p, h) => {
       if (h && h.active) h.destroy();
-      this.score -= 10; this.lives--;
-      if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
+      this.takeDamage('hazard');
     });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
 
@@ -118,14 +117,16 @@ class BaseLevel extends Phaser.Scene {
     this.savedText.setText(`Salvados: ${this.npcsSaved}/${this.npcTarget}`);
   }
 
-  onEnemyHit() {
+  takeDamage(source) {
     if (this.invuln || this._go) return;
     this.score -= 10; this.lives--;
     this.invuln = true; this.player.setAlpha(0.5);
-    this.enemy.setPosition(410, 60);
-    this.enemy.setVelocity(0, 0);
+    if (source === 'enemy' && this.hasEnemy()) {
+      this.enemy.setPosition(410, 60);
+      this.enemy.setVelocity(0, 0);
+    }
+    if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); return; }
     this.time.delayedCall(500, () => { this.invuln = false; this.player.setAlpha(1); });
-    if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
   }
 
   buildDoors() {
