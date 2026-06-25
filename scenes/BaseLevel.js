@@ -61,8 +61,14 @@ class BaseLevel extends Phaser.Scene {
     this.physics.add.collider(this.player, this.seats);
     this.physics.add.collider(this.npcs, this.walls);
     this.physics.add.collider(this.npcs, this.seats);
-    this.physics.add.collider(this.falling, this.walls, h => h.destroy());
-    this.physics.add.collider(this.falling, this.seats, h => h.destroy());
+    this.physics.add.collider(this.falling, this.walls, h => {
+      h.setActive(false).setVisible(false);
+      if (h.body) h.body.enable = false;
+    });
+    this.physics.add.collider(this.falling, this.seats, h => {
+      h.setActive(false).setVisible(false);
+      if (h.body) h.body.enable = false;
+    });
 
     if (this.hasEnemy()) {
       this.physics.add.collider(this.enemy, this.walls);
@@ -192,7 +198,7 @@ class BaseLevel extends Phaser.Scene {
       const h = this.falling.create(x, -40, type);
       h.setDisplaySize(sz[type][0], sz[type][1]);
       h.setVelocityY(cfg.hazardSpeed);
-      this.time.delayedCall(3500, () => { if (h && h.active) h.destroy(); });
+      this.time.delayedCall(3500, () => { if (h) h.destroy(); });
     });
   }
 
