@@ -39,7 +39,7 @@ Si apretás ESPACIO sin un NPC cerca, perdés 5 puntos.
 
 ## Link al juego
 
-[Jugar online](https://github.com/F4cuu/TPFINAL-DT2)
+[Jugar online](https://f4cuu.github.io/TPFINAL-DT2/)
 
 ## Tecnología
 
