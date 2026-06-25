@@ -67,13 +67,8 @@ class BaseLevel extends Phaser.Scene {
     if (this.hasEnemy()) {
       this.physics.add.collider(this.enemy, this.walls);
       this.physics.add.collider(this.enemy, this.seats);
-      this.physics.add.overlap(this.player, this.enemy, () => this.takeDamage('enemy'));
     }
 
-    this.physics.add.overlap(this.player, this.falling, (p, h) => {
-      if (h && h.active) h.destroy();
-      this.takeDamage('hazard');
-    });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
 
     const initSpawns = cfg.initialSpawns || 2;
@@ -94,11 +89,22 @@ class BaseLevel extends Phaser.Scene {
     if (this.keys.right.isDown) this.player.setVelocityX(200);
     if (this.keys.up.isDown) this.player.setVelocityY(-200);
     if (this.keys.down.isDown) this.player.setVelocityY(200);
-    this.player.x = Phaser.Math.Clamp(this.player.x, 130, 670);
+    this.player.x = Math.min(670, Math.max(130, this.player.x));
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.space)) this.pushNpc();
 
-    this.npcs.getChildren().forEach(npc => {
+    const fallingCopy = this.falling.getChildren().slice();
+    fallingCopy.forEach(h => {
+      if (!h.active) return;
+      const dhx = this.player.x - h.x, dhy = this.player.y - h.y;
+      if (Math.sqrt(dhx * dhx + dhy * dhy) < 20) {
+        h.destroy();
+        this.takeDamage('hazard');
+      }
+    });
+
+    const npcCopy = this.npcs.getChildren().slice();
+    npcCopy.forEach(npc => {
       if (!npc.saved && (npc.x < 120 || npc.x > 680)) this.saveNpc(npc);
     });
 
@@ -109,6 +115,7 @@ class BaseLevel extends Phaser.Scene {
       if (dist > 0) {
         this.enemy.setVelocity((dx / dist) * 130, (dy / dist) * 130);
       }
+      if (dist < 20) this.takeDamage('enemy');
     }
 
     this.scoreText.setText(`Puntos: ${this.score}`);
