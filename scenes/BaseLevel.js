@@ -98,7 +98,8 @@ class BaseLevel extends Phaser.Scene {
       if (!h.active) return;
       const dhx = this.player.x - h.x, dhy = this.player.y - h.y;
       if (Math.sqrt(dhx * dhx + dhy * dhy) < 20) {
-        h.destroy();
+        h.setActive(false).setVisible(false);
+        h.body.enable = false;
         this.takeDamage('hazard');
       }
     });
