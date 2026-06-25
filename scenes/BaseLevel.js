@@ -64,7 +64,11 @@ class BaseLevel extends Phaser.Scene {
     this.physics.add.collider(this.falling, this.walls, h => h.destroy());
     this.physics.add.collider(this.falling, this.seats, h => h.destroy());
 
-    if (this.hasEnemy()) this.physics.add.collider(this.enemy, this.walls);
+    if (this.hasEnemy()) {
+      this.physics.add.collider(this.enemy, this.walls);
+      this.physics.add.collider(this.enemy, this.seats);
+      this.physics.add.overlap(this.player, this.enemy, this.onEnemyHit, null, this);
+    }
 
     this.physics.add.overlap(this.player, this.falling, (p, h) => {
       if (h && h.active) h.destroy();
@@ -100,13 +104,11 @@ class BaseLevel extends Phaser.Scene {
     });
 
     if (this.hasEnemy()) {
-      this.physics.moveToObject(this.enemy, this.player, 130);
-      this.enemy.body.velocity.x = Phaser.Math.Clamp(this.enemy.body.velocity.x, -130, 130);
-      if (!this.invuln && !this._go && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.enemy.x, this.enemy.y) < 20) {
-        this.score -= 10; this.lives--;
-        this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60);
-        this.time.delayedCall(500, () => { this.invuln = false; this.player.setAlpha(1); });
-        if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
+      const dx = this.player.x - this.enemy.x;
+      const dy = this.player.y - this.enemy.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 0) {
+        this.enemy.setVelocity((dx / dist) * 130, (dy / dist) * 130);
       }
     }
 
@@ -114,6 +116,16 @@ class BaseLevel extends Phaser.Scene {
     this.livesText.setText(`Vidas: ${this.lives}`);
     this.timeText.setText(`Tiempo: ${this.timeRemaining}s`);
     this.savedText.setText(`Salvados: ${this.npcsSaved}/${this.npcTarget}`);
+  }
+
+  onEnemyHit() {
+    if (this.invuln || this._go) return;
+    this.score -= 10; this.lives--;
+    this.invuln = true; this.player.setAlpha(0.5);
+    this.enemy.setPosition(410, 60);
+    this.enemy.setVelocity(0, 0);
+    this.time.delayedCall(500, () => { this.invuln = false; this.player.setAlpha(1); });
+    if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
   }
 
   buildDoors() {
@@ -129,7 +141,9 @@ class BaseLevel extends Phaser.Scene {
     let near = null, minD = 90;
     this.npcs.getChildren().forEach(n => {
       if (n.saved) return;
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, n.x, n.y);
+      const dx = this.player.x - n.x;
+      const dy = this.player.y - n.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
       if (d < minD) { minD = d; near = n; }
     });
     if (!near) { this.score -= 5; this.showPenalty(); return; }
