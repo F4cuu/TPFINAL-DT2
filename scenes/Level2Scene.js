@@ -111,11 +111,12 @@ class Level2Scene extends Phaser.Scene {
 
   createCoins() {
     this.coins = this.physics.add.staticGroup();
-    [[293, 108], [525, 108], [293, 204], [525, 204],
-      [293, 300], [525, 300], [293, 396], [525, 396],
-      [293, 60], [525, 60], [293, 156], [525, 156],
-      [293, 252], [525, 252], [293, 348], [525, 348],
-      [293, 444], [525, 444]].forEach(p => {
+    [[180, 108], [293, 108], [525, 108],
+      [180, 204], [410, 204], [630, 204],
+      [293, 300], [410, 300], [525, 300],
+      [180, 396], [410, 396], [630, 396],
+      [293, 492], [525, 492], [630, 492],
+      [293, 60], [525, 156], [293, 348]].forEach(p => {
       const c = this.coins.create(p[0], p[1], 'coin');
       c.setDisplaySize(12, 12);
     });
@@ -150,8 +151,8 @@ class Level2Scene extends Phaser.Scene {
     if (this.timeRemaining <= 0) return;
     const type = Phaser.Utils.Array.GetRandom(['box', 'luggage', 'person']);
     const lane = Phaser.Utils.Array.GetRandom([293, 525]);
-    const x = Phaser.Math.Between(-4, 4) + lane;
-    const sz = { box: [30, 30], luggage: [36, 26], person: [20, 34] };
+    const x = Phaser.Math.Between(-3, 3) + lane;
+    const sz = { box: [26, 26], luggage: [28, 20], person: [16, 26] };
     this.showWarning(x);
     this.time.delayedCall(800, () => {
       if (this.timeRemaining <= 0) return;
