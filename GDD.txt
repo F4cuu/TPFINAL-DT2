@@ -112,8 +112,9 @@ BARRA ESP.  : Empujar NPC cercano
 ━━━━━━━━━━━━
 
 +10   Salvar un NPC (que salga por puerta)
-+10   Completar nivel (bonificación)
+
 +5    Recoger moneda
+-5    Empujar sin NPC cerca (penalización)
 -10   Ser golpeado por obstáculo
 -10   Ser golpeado por enemigo hostil
 
@@ -146,10 +147,13 @@ Todos los niveles comparten:
 - Paredes laterales con puertas en cada
   pasillo horizontal
 
-Niveles 1 y 3:
+Nivel 1:
 - 3 columnas de asientos (110px c/u)
-- Pasillos verticales de 110px (N1)
-  o 80-90px (N3)
+- Pasillos verticales de 110px
+
+Nivel 3:
+- 2 columnas de asientos (160px c/u)
+- 3 pasillos verticales (80-90px c/u)
 
 Nivel 2:
 - Columnas laterales pegadas a paredes
@@ -199,15 +203,19 @@ GameOverScene
 11. ARCHIVOS DEL PROYECTO
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-index.html          : Página principal, CDN
-game.js             : Configuración de Phaser
-helpers.js          : Generación de texturas
-                     (7 texturas + enemigo)
-scenes/MenuScene.js     : 51 líneas
-scenes/Level1Scene.js   : 173 líneas
-scenes/Level2Scene.js   : 174 líneas
-scenes/Level3Scene.js   : 187 líneas
-scenes/GameOverScene.js : 25 líneas
-scenes/VictoryScene.js  : 22 líneas
+index.html            : Página principal, CDN
+game.js               : Configuración de Phaser,
+                        escalado FIT multidispositivo
+helpers.js            : Generación de texturas
+                        (8 texturas: player, npc, box,
+                        luggage, person, wall, coin, enemy)
+scenes/BaseLevel.js   : Clase base con lógica común
+scenes/MenuScene.js   : ~51 líneas
+scenes/Level1Scene.js : ~65 líneas
+scenes/Level2Scene.js : ~65 líneas
+scenes/Level3Scene.js : ~80 líneas
+scenes/GameOverScene.js : ~25 líneas
+scenes/VictoryScene.js  : ~22 líneas
 
 Todos los archivos ≤ 200 líneas.
+Las texturas se generan en preload().
