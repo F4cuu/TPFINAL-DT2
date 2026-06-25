@@ -14,7 +14,10 @@ class GameOverScene extends Phaser.Scene {
     this.add.text(400, 340, 'REINTENTAR', { fontSize: '20px', fontStyle: 'bold', color: '#000' }).setOrigin(0.5);
     btnR.on('pointerover', () => btnR.setFillStyle(0x3dbdb5));
     btnR.on('pointerout', () => btnR.setFillStyle(0x4ecdc4));
-    btnR.on('pointerdown', () => this.scene.start('Level1Scene', { score: 0, lives: 3 }));
+    btnR.on('pointerdown', () => {
+      this.scene.stop('Level1Scene');
+      this.scene.start('Level1Scene', { score: 0, lives: 3 });
+    });
 
     const btnM = this.add.rectangle(400, 420, 220, 50, 0x666666).setInteractive({ useHandCursor: true });
     this.add.text(400, 420, 'MENÚ', { fontSize: '20px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);

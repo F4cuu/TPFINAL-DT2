@@ -10,6 +10,8 @@ class BaseLevel extends Phaser.Scene {
   init(data) {
     this.score = data.score || 0;
     this.lives = data.lives !== undefined ? data.lives : 3;
+    this.invuln = false;
+    this._go = false;
   }
 
   create() {
@@ -28,11 +30,13 @@ class BaseLevel extends Phaser.Scene {
     this.buildDoors();
     this.player = this.physics.add.sprite(410, 300, 'player');
     this.player.setDisplaySize(18, 26);
+    if (this.player.body) this.player.body.setSize(18, 26).setOffset(0, 0);
     this.player.setCollideWorldBounds(true);
 
     if (this.hasEnemy()) {
       this.enemy = this.physics.add.sprite(410, 60, 'enemy');
       this.enemy.setDisplaySize(18, 26);
+      if (this.enemy.body) this.enemy.body.setSize(18, 26).setOffset(0, 0);
       this.enemy.setCollideWorldBounds(true);
     }
     this.invuln = false;
@@ -76,6 +80,12 @@ class BaseLevel extends Phaser.Scene {
     }
 
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
+    this.physics.add.overlap(this.player, this.falling, (p, h) => {
+      if (!h.active) return;
+      h.setActive(false).setVisible(false);
+      if (h.body) h.body.enable = false;
+      this.takeDamage('hazard');
+    });
 
     const initSpawns = cfg.initialSpawns || 2;
     for (let i = 0; i < initSpawns; i++) this.spawnHazard();
@@ -98,17 +108,6 @@ class BaseLevel extends Phaser.Scene {
     this.player.x = Math.min(670, Math.max(130, this.player.x));
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.space)) this.pushNpc();
-
-    const fallingCopy = this.falling.getChildren().slice();
-    fallingCopy.forEach(h => {
-      if (!h.active) return;
-      const dhx = this.player.x - h.x, dhy = this.player.y - h.y;
-      if (Math.sqrt(dhx * dhx + dhy * dhy) < 20) {
-        h.setActive(false).setVisible(false);
-        h.body.enable = false;
-        this.takeDamage('hazard');
-      }
-    });
 
     const npcCopy = this.npcs.getChildren().slice();
     npcCopy.forEach(npc => {
@@ -197,6 +196,7 @@ class BaseLevel extends Phaser.Scene {
       if (this.timeRemaining <= 0) return;
       const h = this.falling.create(x, -40, type);
       h.setDisplaySize(sz[type][0], sz[type][1]);
+      if (h.body) h.body.setSize(sz[type][0], sz[type][1]).setOffset(0, 0);
       h.setVelocityY(cfg.hazardSpeed);
       this.time.delayedCall(3500, () => { if (h) h.destroy(); });
     });
