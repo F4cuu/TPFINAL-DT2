@@ -17,15 +17,14 @@ class Level3Scene extends Phaser.Scene {
     this.npcsSaved = 0;
     this.npcTarget = 6;
     this.falling = this.physics.add.group();
-    this.enemyHits = 3;
     this.invuln = false;
 
     this.buildWallsAndSeats();
     this.buildDoors();
     this.player = this.physics.add.sprite(410, 300, 'player'); this.player.setDisplaySize(18, 26); this.player.setCollideWorldBounds(true);
-    this.enemy = this.physics.add.sprite(410, 60, 'enemy'); this.enemy.setDisplaySize(18, 26);
+    this.enemy = this.physics.add.sprite(410, 60, 'enemy'); this.enemy.setDisplaySize(18, 26); this.enemy.setCollideWorldBounds(true);
     this.npcs = this.physics.add.group();
-    [[180, 108], [180, 300], [180, 492], [630, 108], [630, 300], [630, 492]].forEach(p => {
+    [[165, 108], [165, 300], [165, 492], [655, 108], [655, 300], [655, 492]].forEach(p => {
       const n = this.physics.add.sprite(p[0], p[1], 'npc');
       n.setDisplaySize(16, 24); n.setCollideWorldBounds(true); n.saved = false;
       this.npcs.add(n);
@@ -35,7 +34,7 @@ class Level3Scene extends Phaser.Scene {
     this.livesText = this.add.text(10, 35, `Vidas: ${this.lives}`, { fontSize: '16px', color: '#ff6b6b' });
     this.timeText = this.add.text(10, 60, `Tiempo: ${this.timeRemaining}s`, { fontSize: '16px', color: '#ffeb3b' });
     this.savedText = this.add.text(10, 85, `Salvados: ${this.npcsSaved}/${this.npcTarget}`, { fontSize: '16px', color: '#4ecdc4' });
-    this.enemyText = this.add.text(10, 110, `Golpes Enemigo: ${this.enemyHits}`, { fontSize: '16px', color: '#ff4444' });
+
     this.keys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.UP, down: Phaser.Input.Keyboard.KeyCodes.DOWN,
       left: Phaser.Input.Keyboard.KeyCodes.LEFT, right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
@@ -47,7 +46,6 @@ class Level3Scene extends Phaser.Scene {
     this.physics.add.collider(this.npcs, this.walls);
     this.physics.add.collider(this.npcs, this.seats);
     this.physics.add.collider(this.enemy, this.walls);
-    this.physics.add.collider(this.enemy, this.seats);
     this.physics.add.collider(this.falling, this.walls, h => h.destroy());
     this.physics.add.collider(this.falling, this.seats, h => h.destroy());
     this.physics.add.overlap(this.player, this.falling, (p, h) => {
@@ -56,13 +54,6 @@ class Level3Scene extends Phaser.Scene {
       if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
     });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
-    this.physics.add.overlap(this.player, this.enemy, () => {
-      if (this.invuln || this._go) return;
-      this.score -= 5; this.enemyHits--;
-      this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60);
-      this.time.delayedCall(1000, () => { this.invuln = false; this.player.setAlpha(1); });
-      if (this.enemyHits <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
-    });
 
     this.spawnHazard(); this.spawnHazard(); this.spawnHazard();
     this.hazardSpawner = this.time.addEvent({
@@ -86,13 +77,18 @@ class Level3Scene extends Phaser.Scene {
     this.npcs.getChildren().forEach(npc => {
       if (!npc.saved && (npc.x < 120 || npc.x > 680)) this.saveNpc(npc);
     });
-    this.physics.moveToObject(this.enemy, this.player, 130, 650);
-    this.enemy.x = Phaser.Math.Clamp(this.enemy.x, 130, 670);
+    this.physics.moveToObject(this.enemy, this.player, 130);
+    this.enemy.body.velocity.x = Phaser.Math.Clamp(this.enemy.body.velocity.x, -130, 130);
+    if (!this.invuln && !this._go && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.enemy.x, this.enemy.y) < 20) {
+      this.score -= 5; this.lives--;
+      this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60);
+      this.time.delayedCall(500, () => { this.invuln = false; this.player.setAlpha(1); });
+      if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
+    }
     this.scoreText.setText(`Puntos: ${this.score}`);
     this.livesText.setText(`Vidas: ${this.lives}`);
     this.timeText.setText(`Tiempo: ${this.timeRemaining}s`);
     this.savedText.setText(`Salvados: ${this.npcsSaved}/${this.npcTarget}`);
-    this.enemyText.setText(`Golpes Enemigo: ${this.enemyHits}`);
   }
 
   buildWallsAndSeats() {
@@ -108,9 +104,9 @@ class Level3Scene extends Phaser.Scene {
       if (600 - p > 0) { const w = this.walls.create(x, p + (600 - p) / 2, 'wall'); w.setDisplaySize(14, 600 - p).refreshBody(); }
     });
     this.seats = this.physics.add.staticGroup();
-    [190, 410, 630].forEach(c => {
+    [[285, 160], [535, 160]].forEach(([c, w]) => {
       [[60,60],[156,60],[252,60],[348,60],[444,60],[540,60]].forEach(([y, h]) => {
-        const s = this.add.rectangle(c, y, 110, h, 0x555555);
+        const s = this.add.rectangle(c, y, w, h, 0x555555);
         this.physics.add.existing(s, true); this.seats.add(s);
       });
     });
@@ -127,11 +123,13 @@ class Level3Scene extends Phaser.Scene {
 
   createCoins() {
     this.coins = this.physics.add.staticGroup();
-    [[410, 108], [605, 108], [180, 204], [410, 300], [605, 300],
-      [180, 396], [410, 492], [605, 492],
-      [300, 60], [520, 60], [300, 156], [520, 156],
-      [300, 252], [520, 252], [300, 348], [520, 348],
-      [300, 444], [520, 444]].forEach(p => {
+    [[165, 108], [410, 108], [655, 108],
+      [165, 204], [410, 204],
+      [165, 300], [655, 300],
+      [410, 396], [655, 396],
+      [165, 492], [410, 492], [655, 492],
+      [165, 60], [655, 156], [410, 252],
+      [165, 348], [655, 444], [410, 540]].forEach(p => {
       const c = this.coins.create(p[0], p[1], 'coin');
       c.setDisplaySize(12, 12);
     });
@@ -165,7 +163,7 @@ class Level3Scene extends Phaser.Scene {
   spawnHazard() {
     if (this.timeRemaining <= 0) return;
     const type = Phaser.Utils.Array.GetRandom(['box', 'luggage', 'person']);
-    const lane = Phaser.Utils.Array.GetRandom([300, 520]);
+    const lane = Phaser.Utils.Array.GetRandom([165, 410, 655]);
     const x = Phaser.Math.Between(-15, 15) + lane;
     const sz = { box: [30, 30], luggage: [36, 26], person: [20, 34] };
     this.showWarning(x);
