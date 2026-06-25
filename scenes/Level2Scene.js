@@ -46,7 +46,7 @@ class Level2Scene extends Phaser.Scene {
     this.physics.add.collider(this.falling, this.seats, h => h.destroy());
     this.physics.add.overlap(this.player, this.falling, (p, h) => {
       if (h && h.active) h.destroy();
-      this.score -= 5; this.lives--;
+      this.score -= 10; this.lives--;
       if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
     });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });

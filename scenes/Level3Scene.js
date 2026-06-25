@@ -50,7 +50,7 @@ class Level3Scene extends Phaser.Scene {
     this.physics.add.collider(this.falling, this.seats, h => h.destroy());
     this.physics.add.overlap(this.player, this.falling, (p, h) => {
       if (h && h.active) h.destroy();
-      this.score -= 5; this.lives--;
+      this.score -= 10; this.lives--;
       if (this.lives <= 0 && !this._go) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }
     });
     this.physics.add.overlap(this.player, this.coins, (p, c) => { c.destroy(); this.score += 5; });
@@ -80,7 +80,7 @@ class Level3Scene extends Phaser.Scene {
     this.physics.moveToObject(this.enemy, this.player, 130);
     this.enemy.body.velocity.x = Phaser.Math.Clamp(this.enemy.body.velocity.x, -130, 130);
     if (!this.invuln && !this._go && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.enemy.x, this.enemy.y) < 20) {
-      this.score -= 5; this.lives--;
+      this.score -= 10; this.lives--;
       this.invuln = true; this.player.setAlpha(0.5); this.enemy.setPosition(410, 60);
       this.time.delayedCall(500, () => { this.invuln = false; this.player.setAlpha(1); });
       if (this.lives <= 0) { this._go = true; this.scene.start('GameOverScene', { score: this.score }); }

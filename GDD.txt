@@ -1,73 +1,213 @@
-GDD Básico - Avión en Peligro
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        PARACHUTE PUSH — GDD
+  "Está mal, pero no tan mal"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Contexto
-- El jugador está dentro de un avión que va a estrellarse contra dos torres.
-- El objetivo es empujar a los tripulantes fuera del avión para que usen sus paracaídas.
-- Hay un límite de tiempo de 60 segundos antes de que el avión choque.
-- El escenario debe transmitir urgencia y peligro sin glorificar la tragedia.
+1. CONCEPTO CENTRAL
+━━━━━━━━━━━━━━━━━━
 
-2. Controles del Jugador
-- Flecha Arriba: Mover arriba
-- Flecha Abajo: Mover abajo
-- Flecha Izquierda: Mover izquierda
-- Flecha Derecha: Mover derecha
-- Barra Espaciadora: Empujar NPC
+"Está mal, pero no tan mal" nace de una
+premisa absurda: un avión se va a estrellar, y la solución no es
+evitar la catástrofe, sino empujar a los
+pasajeros fuera del avión para que usen
+sus paracaídas.
 
-3. Mecánica principal
-- El jugador controla a un personaje dentro de la cabina del avión.
-- Puede moverse con flechas del teclado y empujar a los NPCs con barra espaciadora.
-- Empujar a un NPC hacia una zona segura hace que se lance con paracaídas.
-- Empujar sin motivo o mal puede restar puntos o causar pérdida de vidas.
-- No empujar a tiempo puede significar fracaso del nivel.
+La situación está MAL, pero tenés paracaídas, así que
+"no tan mal". El juego vive en esa
+contradicción: urgencia y desastre inminente
+contra una solución ridícula que
+milagrosamente funciona.
 
-4. Nivel 1
-- NPCs a rescatar: 15
-- Tiempo límite: 60 segundos
-- Peligros: Maletas, equipaje, azafatas, niños caen desde arriba (parte frontal del avión)
-- Objetivo: Salvar una cantidad mínima de NPCs antes de que termine el tiempo
+Cada nivel sube la apuesta del "mal":
+- Nivel 1: está mal, hay objetos que caen
+- Nivel 2: está peor, los pasillos se
+  angostan
+- Nivel 3: está Remal, aparece un pasajero
+  hostil que te quiere llevar puesto
 
-5. Puntajes
-- Salvar un tripulante: +10 puntos
-- Empujar sin necesidad: -5 puntos
-- Tocar un peligro: -10 puntos + -1 vida
+Pero siempre, "no tan mal": podés
+esquivar, podés empujar, podés ganar.
 
-6. Vidas
-- Comenzar con 3 vidas
-- Se pierden al tocar peligros que caen
-- Game Over si se llega a 0 vidas
 
-7. Señales de advertencia
-- Antes de que caiga un peligro, mostrar una sombra o zona marcada en el piso.
-- Dar tiempo al jugador para reaccionar.
+2. PLATAFORMA Y TECNOLOGÍA
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-8. Niveles
-- Nivel 1: Introducción. 15 NPCs, peligros moderados.
-- Nivel 2: Mayor dificultad. Más peligros, menos tiempo de reacción.
-- Nivel 3: Nivel final. Incluye un NPC peligroso + máxima dificultad.
+- Motor: Phaser 4.1.0 "Salusa" (CDN)
+- Lenguaje: JavaScript (ES6+)
+- Canvas: 800×600 píxeles
+- Física: Arcade (gravedad 0, detección de
+  colisiones por cajas)
+- Audio: No implementado
 
-9. Escenas necesarias
-- MenuScene: inicio, botón Jugar.
-- Level1Scene, Level2Scene, Level3Scene.
-- GameOverScene.
-- VictoryScene.
 
-10. Elementos obligatorios
-- Mecánica de empujar/mover NPCs.
-- NPCs o personas en peligro (15 en nivel 1).
-- Objetos o acciones que sumen puntos (+10 por rescate).
-- Objetos o acciones que resten puntos (-5 por empuje innecesario).
-- Obstáculos o enemigos que resten vidas (-1 vida al tocar peligro).
-- Señales visuales antes del peligro.
-- Puntaje y vidas entre niveles.
-- NPC peligroso en el último nivel.
+3. ESTRUCTURA DEL JUEGO
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-11. Idea de nombre
-- "Parachute Push"
-- Representa la tensión de salvar a personas antes de una catástrofe.
+MenuScene → Level1Scene → Level2Scene →
+Level3Scene → VictoryScene
+                  ↓
+            GameOverScene (si falla)
+                  ↓
+         MenuScene o reintentar
 
-12. Detalles de desarrollo
-- Organizar el proyecto en escenas y archivos separados.
-- Usar Phaser.js y el CDN importado en index.html.
-- Agregar assets visuales después de la lógica.
-- Mantener el código claro y modular, sin superar 200 líneas por archivo.
 
+4. CONTROLES
+━━━━━━━━━━━━━━━━
+
+↑ ↓ ← →     : Movimiento del jugador
+BARRA ESP.  : Empujar NPC cercano
+
+
+5. MECÁNICAS PRINCIPALES
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1. EMPUJAR NPCs
+- El jugador se acerca a un NPC (distancia
+  ≤ 90px) y presiona ESPACIO
+- El NPC sale disparado hacia la salida
+  más cercana (izquierda/derecha según
+  su posición)
+- Si el NPC atraviesa una puerta (gap en
+  la pared), se salva: +10 puntos
+- Los NPCs colisionan con asientos y
+  paredes, pero son inmunes a los
+  obstáculos que caen
+
+5.2. OBSTÁCULOS QUE CAEN
+- Tipos: caja (box), equipaje (luggage),
+  persona (person)
+- Caen por pasillos verticales desde arriba
+- Antes de caer, aparece una señal de
+  advertencia "!" con fade out
+- Si golpean al jugador: -10 puntos y
+  -1 vida
+- Colisionan con asientos y paredes y se
+  destruyen
+
+5.3. MONEDAS
+- Están dispersas en pasillos y zonas de
+  peligro
+- Recolectarlas da +5 puntos
+- No tienen colisión física (solo overlap)
+
+5.4. VIDA ÚNICA
+- El jugador tiene 3 vidas
+- Obstáculos y enemigo restan 1 vida cada
+  golpe
+- Llegar a 0 vidas = Game Over
+- No hay vidas extra ni recuperación
+
+5.5. NPC HOSTIL (NIVEL 3)
+- Persigue al jugador a velocidad
+  constante (130 píxeles/s)
+- Puede atravesar asientos pero no paredes
+- Al golpear: -10 puntos, -1 vida,
+  invulnerabilidad de 500ms, se teletrans-
+  porta a su posición inicial
+- Comparte el mismo contador de vidas que
+  los obstáculos
+
+
+6. PUNTAJES
+━━━━━━━━━━━━
+
++10   Salvar un NPC (que salga por puerta)
++10   Completar nivel (bonificación)
++5    Recoger moneda
+-10   Ser golpeado por obstáculo
+-10   Ser golpeado por enemigo hostil
+
+
+7. NIVELES
+━━━━━━━━━━
+
+| Atributo        | Nivel 1 | Nivel 2 | Nivel 3 |
+|-----------------|---------|---------|---------|
+| NPCs a salvar   | 4       | 5       | 6       |
+| Tiempo (seg)    | 60      | 50      | 40      |
+| Vel. obstáculos | 200     | 250     | 300     |
+| Spawn obst. (ms)| 2000    | 1500    | 1000    |
+| NPC hostil      | No      | No      | Sí      |
+| Pasillos vert.  | 110px   | 36px    | 80-90px |
+| Columnas        | 3       | 3       | 2       |
+
+Dificultad incremental clara: más NPCs,
+menos tiempo, obstáculos más rápidos
+y frecuentes, pasillos que se angostan
+(N2) y enemigo hostil (N3).
+
+
+8. MAPA (DISEÑO GENERAL)
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Todos los niveles comparten:
+- 6 filas de asientos (60px c/u)
+- 5 pasillos horizontales (36px c/u)
+- Paredes laterales con puertas en cada
+  pasillo horizontal
+
+Niveles 1 y 3:
+- 3 columnas de asientos (110px c/u)
+- Pasillos verticales de 110px (N1)
+  o 80-90px (N3)
+
+Nivel 2:
+- Columnas laterales pegadas a paredes
+  (tocan X=125 y X=695)
+- Columna central estirada
+- Pasillos verticales de 36px
+
+
+9. ESCENAS DEL JUEGO
+━━━━━━━━━━━━━━━━━━━━
+
+MenuScene      : Título, subtítulo,
+                 instrucciones, botón JUGAR
+Level1Scene    : Primer nivel (4 NPCs)
+Level2Scene    : Segundo nivel (5 NPCs,
+                 pasillos angostos)
+Level3Scene    : Tercer nivel (6 NPCs,
+                 enemigo hostil)
+GameOverScene  : Pantalla de derrota con
+                 reintentar o menú
+VictoryScene   : Pantalla de victoria con
+                 puntaje final y volver
+
+
+10. FLUJO DE PANTALLAS
+━━━━━━━━━━━━━━━━━━━━━━
+
+MenuScene
+  ↓ (JUGAR)
+Level1Scene
+  ↓ (salvar 4 NPCs o tiempo≥0)
+Level2Scene
+  ↓ (salvar 5 NPCs o tiempo≥0)
+Level3Scene
+  ↓ (salvar 6 NPCs o tiempo≥0)
+VictoryScene
+  ↓ (VOLVER AL MENÚ)
+MenuScene
+
+Cualquier nivel:
+  ↓ (vidas=0 o tiempo≥0 sin salvar)
+GameOverScene
+  ↓ (REINTENTAR → Level1Scene)
+  ↓ (MENÚ → MenuScene)
+
+
+11. ARCHIVOS DEL PROYECTO
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+index.html          : Página principal, CDN
+game.js             : Configuración de Phaser
+helpers.js          : Generación de texturas
+                     (7 texturas + enemigo)
+scenes/MenuScene.js     : 51 líneas
+scenes/Level1Scene.js   : 173 líneas
+scenes/Level2Scene.js   : 174 líneas
+scenes/Level3Scene.js   : 187 líneas
+scenes/GameOverScene.js : 25 líneas
+scenes/VictoryScene.js  : 22 líneas
+
+Todos los archivos ≤ 200 líneas.
