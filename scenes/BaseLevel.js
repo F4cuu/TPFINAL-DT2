@@ -39,7 +39,6 @@ class BaseLevel extends Phaser.Scene {
       if (this.enemy.body) this.enemy.body.setSize(18, 26).setOffset(0, 0);
       this.enemy.setCollideWorldBounds(true);
     }
-    this.invuln = false;
 
     this.npcs = this.physics.add.group();
     this.getNpcPositions().forEach(p => {
@@ -134,7 +133,7 @@ class BaseLevel extends Phaser.Scene {
     if (this.invuln || this._go) return;
     this.score -= 10; this.lives--;
     this.invuln = true; this.player.setAlpha(0.5);
-    if (source === 'enemy' && this.hasEnemy()) {
+    if (source === 'enemy') {
       this.enemy.setPosition(410, 60);
       this.enemy.setVelocity(0, 0);
     }
